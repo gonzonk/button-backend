@@ -2,13 +2,12 @@ import { ObjectId } from "mongodb";
 
 import { Router, getExpressRouter } from "./framework/router";
 
-import { Authing, Friending, Posting, Sessioning } from "./app";
+import { Authing, Commenting, Friending, Posting, Rating, Sessioning } from "./app";
 import { PostOptions } from "./concepts/posting";
 import { SessionDoc } from "./concepts/sessioning";
 import Responses from "./responses";
 
 import { z } from "zod";
-
 /**
  * Web server routes for the app. Implements synchronizations between concepts.
  */
@@ -152,6 +151,36 @@ class Routes {
     const fromOid = (await Authing.getUserByUsername(from))._id;
     return await Friending.rejectRequest(fromOid, user);
   }
+
+  @Router.put("/comments")
+  async createComment(session: SessionDoc, parentId: string, content: string) {
+    const user = Sessioning.getUser(session);
+    const comment = await Commenting.create(user, content, new ObjectId(parentId));
+    return comment;
+  }
+
+  @Router.delete("/comments/:id")
+  async deleteComment(session: SessionDoc, id: string) {
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(id);
+    await Commenting.assertAuthorIsUser(oid, user);
+    return Commenting.delete(oid);
+  }
+
+  @Router.put("/ratings/:id")
+  async rate(rating: number, contentId: string) {
+    return Rating.rate(new ObjectId(contentId), rating);
+  }
+
+  // @Router.put("/Stitches")
+  // async makeStitch(){
+
+  // }
+
+  // @Router.delete("/stitches/:id")
+  // async deleteStitch(){
+
+  // }
 }
 
 /** The web app. */
