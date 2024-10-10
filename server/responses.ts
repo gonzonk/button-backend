@@ -1,6 +1,8 @@
 import { Authing } from "./app";
+import { CommentDoc } from "./concepts/commenting";
 import { AlreadyFriendsError, FriendNotFoundError, FriendRequestAlreadyExistsError, FriendRequestDoc, FriendRequestNotFoundError } from "./concepts/friending";
 import { PostAuthorNotMatchError, PostDoc } from "./concepts/posting";
+import { StitchDoc } from "./concepts/stitching";
 import { Router } from "./framework/router";
 
 /**
@@ -25,6 +27,32 @@ export default class Responses {
   static async posts(posts: PostDoc[]) {
     const authors = await Authing.idsToUsernames(posts.map((post) => post.author));
     return posts.map((post, i) => ({ ...post, author: authors[i] }));
+  }
+
+  static async comment(comment: CommentDoc | null) {
+    if (!comment) {
+      return comment;
+    }
+    const author = await Authing.getUserById(comment.author);
+    return { ...comment, author: author.username };
+  }
+
+  static async comments(comments: CommentDoc[]) {
+    const authors = await Authing.idsToUsernames(comments.map((comment) => comment.author));
+    return comments.map((comment, i) => ({ ...comment, author: authors[i] }));
+  }
+
+  static async stitch(stitch: StitchDoc | null) {
+    if (!stitch) {
+      return stitch;
+    }
+    const author = await Authing.getUserById(stitch.author);
+    return { ...stitch, author: author.username };
+  }
+
+  static async stitches(stitches: StitchDoc[]) {
+    const authors = await Authing.idsToUsernames(stitches.map((stitch) => stitch.author));
+    return stitches.map((stitch, i) => ({ ...stitch, author: authors[i] }));
   }
 
   /**

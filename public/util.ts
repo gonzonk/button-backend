@@ -66,13 +66,19 @@ const operations: Operation[] = [
     name: "Create Post",
     endpoint: "/api/posts",
     method: "POST",
-    fields: { content: "input" },
+    fields: { blueprintMedia: "input", title: "input", description: "input" },
   },
   {
     name: "Update Post",
     endpoint: "/api/posts/:id",
-    method: "PATCH",
+    method: "POST",
     fields: { id: "input", content: "input", options: { backgroundColor: "input" } },
+  },
+  {
+    name: "Add Tag to Post",
+    endpoint: "/api/posts/:id",
+    method: "PATCH",
+    fields: { id: "input", tag: "input" },
   },
   {
     name: "Delete Post",
@@ -80,9 +86,54 @@ const operations: Operation[] = [
     method: "DELETE",
     fields: { id: "input" },
   },
-  //
-  // ...
-  //
+  {
+    name: "Make Comment",
+    endpoint: "/api/comments",
+    method: "PUT",
+    fields: { parentId: "input", content: "input" },
+  },
+  {
+    name: "Get Comments (empty for all)",
+    endpoint: "/api/comments",
+    method: "GET",
+    fields: { author: "input" },
+  },
+  {
+    name: "Delete Comment",
+    endpoint: "/api/comments/:id",
+    method: "DELETE",
+    fields: { id: "input" },
+  },
+  {
+    name: "Rate Post",
+    endpoint: "/api/ratings/:id",
+    method: "PUT",
+    fields: { rating: "input", contentId: "input" },
+  },
+  {
+    name: "Get Rating",
+    endpoint: "/api/ratings/:id",
+    method: "GET",
+    fields: { contentId: "input" },
+  },
+  {
+    name: "Make Stitch",
+    endpoint: "/api/stitches",
+    method: "PUT",
+    fields: { parentId: "input", caption: "input", media: "input" },
+  },
+  {
+    name: "Get Stitches (empty for all)",
+    endpoint: "/api/stitches",
+    method: "GET",
+    fields: { author: "input" },
+  },
+  {
+    name: "Delete Stitch",
+    endpoint: "/api/stitches/:id",
+    method: "DELETE",
+    fields: { id: "input" },
+  },
 ];
 
 /*

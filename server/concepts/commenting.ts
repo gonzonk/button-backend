@@ -27,8 +27,20 @@ export default class CommentingConcept {
     return { msg: "Successfully commented!", comment: await this.comments.readOne(_id) };
   }
 
-  async getComments(parent: ObjectId) {
-    return await this.comments.readMany({ parent: parent }, { sort: { _id: -1 } });
+  async getComments() {
+    return await this.comments.readMany({}, { sort: { _id: -1 } });
+  }
+
+  async getCommentById(_id: ObjectId) {
+    const comment = await this.comments.readOne({ _id });
+    if (comment === null) {
+      throw new NotFoundError(`Post not found!`);
+    }
+    return comment;
+  }
+
+  async getByAuthor(author: ObjectId) {
+    return await this.comments.readMany({ author: author });
   }
 
   async delete(_id: ObjectId) {

@@ -22,13 +22,15 @@ export default class RatingConcept {
   }
 
   async getRating(parent: ObjectId) {
-    return await this.ratings.readOne({ parent: parent });
+    const rating = await this.ratings.readOne({ parent: parent });
+    console.log(rating);
+    return { msg: "Got Rating", rating: rating };
   }
 
   async rate(parent: ObjectId, rating: number) {
     const rat = await this.ratings.readOne({ parent: parent });
     if (rat) {
-      const newRating = (rat.averageRating * rat.numberRaters) / (rat.numberRaters + 1) + rating / rat.numberRaters;
+      const newRating = (rat.averageRating * rat.numberRaters) / (rat.numberRaters + 1) + rating / (rat.numberRaters + 1);
       this.ratings.partialUpdateOne({ _id: rat._id }, { numberRaters: rat.numberRaters + 1, averageRating: newRating });
     } else {
       const _id = await this.ratings.createOne({ parent: parent, numberRaters: 1, averageRating: rating });

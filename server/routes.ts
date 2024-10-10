@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb";
 
 import { Router, getExpressRouter } from "./framework/router";
 
-import { Authing, Commenting, Friending, Posting, Rating, Sessioning } from "./app";
+import { Authing, Commenting, Friending, Posting, Rating, Sessioning, Stitching } from "./app";
 import { PostOptions } from "./concepts/posting";
 import { SessionDoc } from "./concepts/sessioning";
 import Responses from "./responses";
@@ -83,18 +83,25 @@ class Routes {
   }
 
   @Router.post("/posts")
-  async createPost(session: SessionDoc, content: string, options?: PostOptions) {
+  async createPost(session: SessionDoc, blueprintMedia: File, title: string, description: string, tags: string[], options?: PostOptions) {
     const user = Sessioning.getUser(session);
-    const created = await Posting.create(user, content, options);
+    const created = await Posting.create(user, blueprintMedia, title, description, options);
     return { msg: created.msg, post: await Responses.post(created.post) };
   }
 
-  @Router.patch("/posts/:id")
-  async updatePost(session: SessionDoc, id: string, content?: string, options?: PostOptions) {
+  @Router.post("/posts/:id")
+  async updatePost(session: SessionDoc, id: string, blueprintMedia?: File, title?: string, description?: string, tags?: string[], options?: PostOptions) {
     const user = Sessioning.getUser(session);
     const oid = new ObjectId(id);
     await Posting.assertAuthorIsUser(oid, user);
-    return await Posting.update(oid, content, options);
+    return await Posting.update(oid, blueprintMedia, title, description, tags, options);
+  }
+
+  //anyone being able to add tags is intended behavior
+  @Router.patch("/posts/:id")
+  async addTag(session: SessionDoc, id: string, tag: string) {
+    const oid = new ObjectId(id);
+    return await Posting.addTag(oid, tag);
   }
 
   @Router.delete("/posts/:id")
@@ -156,7 +163,20 @@ class Routes {
   async createComment(session: SessionDoc, parentId: string, content: string) {
     const user = Sessioning.getUser(session);
     const comment = await Commenting.create(user, content, new ObjectId(parentId));
-    return comment;
+    return { msg: comment.msg, post: await Responses.comment(comment.comment) };
+  }
+
+  @Router.get("/comments")
+  @Router.validate(z.object({ author: z.string().optional() }))
+  async getComments(author?: string) {
+    let comments;
+    if (author) {
+      const id = (await Authing.getUserByUsername(author))._id;
+      comments = await Commenting.getByAuthor(id);
+    } else {
+      comments = await Commenting.getComments();
+    }
+    return Responses.comments(comments);
   }
 
   @Router.delete("/comments/:id")
@@ -169,18 +189,42 @@ class Routes {
 
   @Router.put("/ratings/:id")
   async rate(rating: number, contentId: string) {
-    return Rating.rate(new ObjectId(contentId), rating);
+    return await Rating.rate(new ObjectId(contentId), rating);
   }
 
-  // @Router.put("/Stitches")
-  // async makeStitch(){
+  @Router.get("/ratings/:id")
+  async getRating(contentId: string) {
+    const rating = await Rating.getRating(new ObjectId(contentId));
+    return { msg: rating.msg, rating: rating.rating };
+  }
 
-  // }
+  @Router.put("/stitches")
+  async makeStitch(session: SessionDoc, caption: string, media: File, parentId: string) {
+    const user = Sessioning.getUser(session);
+    const stitch = await Stitching.create(user, caption, media, new ObjectId(parentId));
+    return { msg: stitch.msg, post: await Responses.stitch(stitch.stitch) };
+  }
 
-  // @Router.delete("/stitches/:id")
-  // async deleteStitch(){
+  @Router.get("/comments")
+  @Router.validate(z.object({ author: z.string().optional() }))
+  async getStitches(author?: string) {
+    let stitches;
+    if (author) {
+      const id = (await Authing.getUserByUsername(author))._id;
+      stitches = await Stitching.getByAuthor(id);
+    } else {
+      stitches = await Stitching.getStitches();
+    }
+    return Responses.stitches(stitches);
+  }
 
-  // }
+  @Router.delete("/stitches/:id")
+  async deleteStitch(session: SessionDoc, id: string) {
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(id);
+    await Stitching.assertAuthorIsUser(oid, user);
+    return Stitching.delete(oid);
+  }
 }
 
 /** The web app. */
